@@ -14,6 +14,8 @@ from typing import (
     Union,
     cast,
 )
+from copy import deepcopy
+import csv
 
 import torch
 from torch import nn
@@ -225,6 +227,102 @@ def summary(
     if verbose > Verbosity.QUIET:
         print(results)
     return results
+
+
+def print_specific_layers(
+    results: ModelStatistics,
+    layer_type: str,
+    dump_to_csv: bool = False,
+    dump_file_path: str = None,
+) -> None:
+    """Print the specified layer summaries"""
+    supported_layer_names = [
+        "Conv2d",
+        "ReLU",
+        "MaxPool2d",
+        "Linear",
+        "Dropout",
+    ]
+    assert layer_type in supported_layer_names, (
+        f"{layer_type} is not supported, see the supported layers below:\n"
+        f"{supported_layer_names}"
+    )
+    print("printing summary of layer type **", layer_type, "**")
+    # create a new extracted summary for the specified layer type only
+    extracted_summary = deepcopy(results)
+    extracted_summary.summary_list = []
+
+    for i in results.summary_list:
+        if i.class_name == layer_type:
+            extracted_summary.summary_list.append(i)
+
+    divider = "=" * extracted_summary.formatting.get_total_width()
+    nf = extracted_summary.formatting
+    summary_str = (
+        f"{divider}\n"
+        f"{extracted_summary.formatting.header_row()}{divider}\n"
+        f"{nf.layers_to_str(extracted_summary.summary_list)}{divider}\n"
+    )
+
+    print(summary_str)
+
+    if dump_to_csv:
+        supported_dump_layer_types = ["Conv2d"]
+        assert layer_type in supported_layer_names, (
+            f"{layer_type} has not been supported to dump to csv yet\n"
+            f"dump_to_csv only support {supported_dump_layer_types} now"
+        )
+        if dump_file_path is None:
+            dump_file_path = "layer_info.csv"
+        if layer_type == "Conv2d":
+            dump_conv2d_layer_to_csv(extracted_summary, dump_file_path)
+
+
+def dump_conv2d_layer_to_csv(results: ModelStatistics, file_path: str) -> None:
+    """Dump Conv2D layer information to a csv files"""
+    csvfile = open(file_path, "w")
+    fieldnames = [
+        "in_chans",
+        "out_chans",
+        "kernel_h",
+        "kernel_w",
+        "input_h",
+        "input_w",
+        "stride_h",
+        "stride_w",
+        "padding_h",
+        "padding_w",
+        "groups",
+        "output_h",
+        "output_w",
+    ]
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
+
+    for i in results.summary_list:
+        m = i.module
+        m_dict = {}
+        m_dict["in_chans"] = m.in_channels
+        m_dict["out_chans"] = m.out_channels
+        assert len(m.kernel_size) == 2
+        m_dict["kernel_h"] = m.kernel_size[0]
+        m_dict["kernel_w"] = m.kernel_size[1]
+        m_dict["input_h"] = i.input_size[-2]
+        m_dict["input_w"] = i.input_size[-1]
+        assert len(m.stride) == 2
+        m_dict["stride_h"] = m.stride[0]
+        m_dict["stride_w"] = m.stride[1]
+        assert len(m.padding) == 2
+        m_dict["padding_h"] = m.padding[0]
+        m_dict["padding_w"] = m.padding[1]
+        m_dict["groups"] = m.groups
+        m_dict["output_h"] = i.output_size[-2]
+        m_dict["output_w"] = i.output_size[-1]
+
+        writer.writerow(m_dict)
+
+    csvfile.close()
+    print("Conv2d layer information has been dumped to", file_path)
 
 
 def process_input(
