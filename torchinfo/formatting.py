@@ -13,6 +13,7 @@ HEADER_TITLES = {
     ColumnSettings.NUM_PARAMS: "Param #",
     ColumnSettings.MULT_ADDS: "Mult-Adds",
     ColumnSettings.TRAINABLE: "Trainable",
+    ColumnSettings.LAYER_STR: "Layer String",
 }
 
 
@@ -99,6 +100,7 @@ class FormattingOptions:
             ColumnSettings.NUM_PARAMS: layer_info.num_params_to_str(reached_max_depth),
             ColumnSettings.MULT_ADDS: layer_info.macs_to_str(reached_max_depth),
             ColumnSettings.TRAINABLE: self.str_(layer_info.trainable),
+            ColumnSettings.LAYER_STR: self.str_(layer_info.layer_str),
         }
         start_str = self.get_start_str(layer_info.depth)
         layer_name = layer_info.get_layer_name(self.show_var_name, self.show_depth)

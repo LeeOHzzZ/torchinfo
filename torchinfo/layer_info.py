@@ -61,6 +61,7 @@ class LayerInfo:
         self.param_bytes = 0
         self.output_bytes = 0
         self.macs = 0
+        self.layer_str = self.get_layer_str(module)
 
     def __repr__(self) -> str:
         return f"{self.class_name}: {self.depth}"
@@ -181,6 +182,12 @@ class LayerInfo:
             else:
                 raise TypeError(f"kernel_size has an unexpected type: {type(k)}")
             return kernel_size
+        return None
+
+    @staticmethod
+    def get_layer_str(module: nn.Module) -> str | None:
+        if not any(module.children()):
+            return str(module)
         return None
 
     def get_layer_name(self, show_var_name: bool, show_depth: bool) -> str:

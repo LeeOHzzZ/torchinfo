@@ -123,6 +123,7 @@ def summary(
                     "kernel_size",
                     "mult_adds",
                     "trainable",
+                    "layer_str",
                 )
                 Default: ("output_size", "num_params")
                 If input_data / input_size are not provided, only "num_params" is used.

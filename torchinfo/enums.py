@@ -31,6 +31,7 @@ class ColumnSettings(str, Enum):
     NUM_PARAMS = "num_params"
     MULT_ADDS = "mult_adds"
     TRAINABLE = "trainable"
+    LAYER_STR = "layer_str"
 
 
 @unique
