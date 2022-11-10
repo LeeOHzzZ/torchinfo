@@ -276,6 +276,27 @@ def print_specific_layers(
             dump_file_path = "layer_info.csv"
         if layer_type == "Conv2d":
             dump_conv2d_layer_to_csv(extracted_summary, dump_file_path)
+        if layer_type == "Linear":
+            dump_linear_layer_to_csv(extracted_summary, dump_file_path)
+
+
+def dump_linear_layer_to_csv(results: ModelStatistics, file_path: str) -> None:
+    """Dump Linear layer information to a csv file"""
+    csvfile = open(file_path, "w")
+    fieldnames = ["batch_size", "in_size", "out_size"]
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
+
+    for i in results.summary_list:
+        m_dict = {}
+        m_dict["batch_size"] = i.input_size[0]
+        m_dict["in_size"] = i.input_size[1]
+        m_dict["out_size"] = i.output_size[1]
+
+        writer.writerow(m_dict)
+
+    csvfile.close()
+    print("Linear layer information has been dumped to", file_path)
 
 
 def dump_conv2d_layer_to_csv(results: ModelStatistics, file_path: str) -> None:
